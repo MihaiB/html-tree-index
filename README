@@ -1,1 +1,3 @@
 Create index.html files in a directory tree.
+
+./main.py --help

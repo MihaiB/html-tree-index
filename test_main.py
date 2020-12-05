@@ -85,7 +85,7 @@ class TestProcessTree(unittest.TestCase):
         self.assertEqual(readTree(self.rootDir.name), self.inTree)
 
     def testProcessTree(self):
-        main.processTree(self.rootDir.name, '<hobbies>', 'index.html')
+        main.processTree(self.rootDir.name, '<hobbies>')
 
         self.outTree = copy.deepcopy(self.inTree)
         self.outTree['arts']['music']['index.html'] = makeHTML('music',
