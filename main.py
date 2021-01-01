@@ -10,7 +10,7 @@ import urllib.parse
 INDEX_FILE_NAME = 'index.html'
 
 
-def parseArgs():
+def parse_args():
     p = argparse.ArgumentParser(description=f'''Create {INDEX_FILE_NAME} files
             in a directory tree.''',
             epilog=f'Existing {INDEX_FILE_NAME} files are not overwritten.')
@@ -18,7 +18,7 @@ def parseArgs():
     return p.parse_args()
 
 
-htmlStartTempl = string.Template('''\
+html_start_templ = string.Template('''\
 <!doctype html>
 <html>
   <head>
@@ -28,9 +28,9 @@ htmlStartTempl = string.Template('''\
   <body>
 ''')
 
-def getHtmlStart(title):
+def get_html_start(title):
     """
-    >>> print(getHtmlStart('<script>'), end='')
+    >>> print(get_html_start('<script>'), end='')
     <!doctype html>
     <html>
       <head>
@@ -39,63 +39,63 @@ def getHtmlStart(title):
       </head>
       <body>
     """
-    return htmlStartTempl.substitute({'title': html.escape(title)})
+    return html_start_templ.substitute({'title': html.escape(title)})
 
-htmlEnd = '''\
+html_end = '''\
   </body>
 </html>
 '''
 
 
-itemTempl = string.Template('''\
+item_templ = string.Template('''\
     <a href="$href">$name</a> $size<br>
 ''')
 
-def getItemHtml(name, filesize):
+def get_item_html(name, filesize):
     """
-    >>> print(getItemHtml('"/\\'<&', 7), end='')
+    >>> print(get_item_html('"/\\'<&', 7), end='')
         <a href="%22/%27%3C%26">&quot;/&#x27;&lt;&amp;</a> 7 B<br>
     """
-    size_str = '{} {}'.format(*humansize.approxFileSize(filesize))
+    size_str = '{} {}'.format(*humansize.approx_file_size(filesize))
 
-    return itemTempl.substitute({
+    return item_templ.substitute({
         'href': urllib.parse.quote(name),
         'name': html.escape(name),
         'size': html.escape(size_str),
         })
 
 
-def processTree(root, title):
+def process_tree(root, title):
     """
     Process the directory tree at root and return its size.
 
     The index page at root uses ‘title’.
     The returned size does not include the index pages we created.
     """
-    itemSize = {}
+    item_size = {}
     for entry in os.scandir(root):
         if entry.is_dir():
-            itemSize[entry.name + '/'] = processTree(
+            item_size[entry.name + '/'] = process_tree(
                     os.path.join(root, entry.name), entry.name)
         elif entry.is_file():
-            itemSize[entry.name] = entry.stat().st_size
+            item_size[entry.name] = entry.stat().st_size
 
     try:
         with open(os.path.join(root, INDEX_FILE_NAME),
                 mode='x', encoding='utf-8') as f:
-            f.write(getHtmlStart(title))
-            for name in sorted(itemSize):
-                f.write(getItemHtml(name, itemSize[name]))
-            f.write(htmlEnd)
+            f.write(get_html_start(title))
+            for name in sorted(item_size):
+                f.write(get_item_html(name, item_size[name]))
+            f.write(html_end)
     except FileExistsError:
         pass
 
-    return sum(itemSize.values())
+    return sum(item_size.values())
 
 
 def main():
-    args = parseArgs()
-    processTree(args.dir, '/')
+    args = parse_args()
+    process_tree(args.dir, '/')
 
 
 if __name__ == '__main__':

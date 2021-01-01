@@ -10,7 +10,7 @@ def approximate(amount, units):
     amount: int
     units: {multiple (int): name (string)}, must include the key ‘1’.
 
-    Returns (value, unitName)
+    Returns (value, unit_name)
 
     Fails for negative values
     >>> approximate(-1, {1: 'm'})
@@ -63,31 +63,31 @@ def approximate(amount, units):
     return amount // multiple, units[multiple]
 
 
-def approxFileSize(nBytes):
+def approx_file_size(n_bytes):
     """
     approximate() for file size multiples.
 
-    >>> approxFileSize(0)
+    >>> approx_file_size(0)
     (0, 'B')
-    >>> approxFileSize(1023)
+    >>> approx_file_size(1023)
     (1023, 'B')
-    >>> approxFileSize(1024)
+    >>> approx_file_size(1024)
     (1, 'KiB')
-    >>> approxFileSize(1025)
+    >>> approx_file_size(1025)
     (1, 'KiB')
-    >>> approxFileSize(1024*1024 - 1)
+    >>> approx_file_size(1024*1024 - 1)
     (1023, 'KiB')
-    >>> approxFileSize(1024*1024 * 3)
+    >>> approx_file_size(1024*1024 * 3)
     (3, 'MiB')
-    >>> approxFileSize(1024*1024 * 3 + 1)
+    >>> approx_file_size(1024*1024 * 3 + 1)
     (3, 'MiB')
-    >>> approxFileSize(1024*1024 * 4 - 1)
+    >>> approx_file_size(1024*1024 * 4 - 1)
     (3, 'MiB')
     """
-    mVal = 1
-    units = {mVal: 'B'}
-    for mPref in ('K', 'M', 'G', 'T'):
-        mVal *= 1024
-        units[mVal] = mPref + 'iB'
+    multiple = 1
+    units = {multiple: 'B'}
+    for prefix in ('K', 'M', 'G', 'T'):
+        multiple *= 1024
+        units[multiple] = prefix + 'iB'
 
-    return approximate(nBytes, units)
+    return approximate(n_bytes, units)

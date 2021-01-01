@@ -5,66 +5,68 @@ import tempfile
 import unittest
 
 
-def makeTree(rootDir, tree):
+def make_tree(root_dir, tree):
     """
-    Creates tree under existing rootDir.
+    Creates tree under existing root_dir.
 
     tree keys are string names, values are bytes if files dictionaries if dirs.
     """
     for k, v in tree.items():
-        itemPath = os.path.join(rootDir, k)
+        item_path = os.path.join(root_dir, k)
         if type(v) is dict:
-            os.mkdir(itemPath)
-            makeTree(itemPath, v)
+            os.mkdir(item_path)
+            make_tree(item_path, v)
         elif type(v) is bytes:
-            with open(itemPath, mode='xb') as f:
+            with open(item_path, mode='xb') as f:
                 f.write(v)
         else:
             raise ValueError('invalid value type: ' + str(type(v)))
 
 
-def readTree(rootDir):
+def read_tree(root_dir):
     tree = {}
-    for item in os.scandir(rootDir):
-        itemPath = os.path.join(rootDir, item.name)
+
+    for item in os.scandir(root_dir):
+        item_path = os.path.join(root_dir, item.name)
 
         if item.is_file():
-            with open(itemPath, 'rb') as f:
+            with open(item_path, 'rb') as f:
                 val = f.read()
         elif item.is_dir():
-            val = readTree(itemPath)
+            val = read_tree(item_path)
         else:
             raise ValueError('I do not know what "{}" is'.format(item.name))
 
         tree[item.name] = val
+
     return tree
 
 
-def getSize(val):
+def get_size(val):
     """dict or bytes"""
     if type(val) is bytes:
         return len(val)
     if type(val) is dict:
-        return sum(getSize(x) for x in val.values())
+        return sum(get_size(x) for x in val.values())
     raise ValueError('invalid type: ' + str(type(val)))
 
 
-def makeHTML(title, tree):
-    html = main.getHtmlStart(title)
+def make_html(title, tree):
+    html = main.get_html_start(title)
     for k, v in sorted(tree.items()):
         name = k + '/' if type(v) is dict else k
-        html += main.getItemHtml(name, getSize(v))
-    html += main.htmlEnd
+        html += main.get_item_html(name, get_size(v))
+    html += main.html_end
     return html.encode('utf-8')
 
 
 class TestProcessTree(unittest.TestCase):
 
     def setUp(self):
-        self.rootDir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.rootDir.cleanup)
+        self.root_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.root_dir.cleanup)
 
-        self.inTree = {
+        self.in_tree = {
             'arts': {
                 'index.html': b'This file will not be changed\n',
                 'music': {
@@ -79,19 +81,19 @@ class TestProcessTree(unittest.TestCase):
             },
             'chores': b'take out the trash\n'
         }
-        makeTree(self.rootDir.name, self.inTree)
+        make_tree(self.root_dir.name, self.in_tree)
 
-    def testMakeReadTree(self):
-        self.assertEqual(readTree(self.rootDir.name), self.inTree)
+    def test_make_read_tree(self):
+        self.assertEqual(read_tree(self.root_dir.name), self.in_tree)
 
-    def testProcessTree(self):
-        main.processTree(self.rootDir.name, '<hobbies>')
+    def test_process_tree(self):
+        main.process_tree(self.root_dir.name, '<hobbies>')
 
-        self.outTree = copy.deepcopy(self.inTree)
-        self.outTree['arts']['music']['index.html'] = makeHTML('music',
-                self.inTree['arts']['music'])
-        self.outTree['code']['index.html'] = makeHTML('code',
-                self.inTree['code'])
-        self.outTree['index.html'] = makeHTML('<hobbies>', self.inTree)
+        self.out_tree = copy.deepcopy(self.in_tree)
+        self.out_tree['arts']['music']['index.html'] = make_html('music',
+                self.in_tree['arts']['music'])
+        self.out_tree['code']['index.html'] = make_html('code',
+                self.in_tree['code'])
+        self.out_tree['index.html'] = make_html('<hobbies>', self.in_tree)
 
-        self.assertEqual(readTree(self.rootDir.name), self.outTree)
+        self.assertEqual(read_tree(self.root_dir.name), self.out_tree)
