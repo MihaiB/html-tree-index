@@ -53,14 +53,9 @@ def get_size(val):
 
 def make_html(title, tree):
     html = main.get_html_start(title)
-
-    fmt_tree = {k + '/' if type(v) is dict else k:
-            main.fmt_file_size(get_size(v))
-            for k, v in tree.items()}
-    fmt_tree[main.INDEX_FILE_NAME] = '-'
-
-    for k, v in sorted(fmt_tree.items()):
-        html += main.get_item_html(k, v)
+    for k, v in sorted(tree.items()):
+        name = k + '/' if type(v) is dict else k
+        html += main.get_item_html(name, get_size(v))
     html += main.html_end
     return html.encode('utf-8')
 
@@ -96,9 +91,9 @@ class TestProcessTree(unittest.TestCase):
 
         self.out_tree = copy.deepcopy(self.in_tree)
         self.out_tree['arts']['music']['index.html'] = make_html('music',
-                self.out_tree['arts']['music'])
+                self.in_tree['arts']['music'])
         self.out_tree['code']['index.html'] = make_html('code',
-                self.out_tree['code'])
-        self.out_tree['index.html'] = make_html('<hobbies>', self.out_tree)
+                self.in_tree['code'])
+        self.out_tree['index.html'] = make_html('<hobbies>', self.in_tree)
 
         self.assertEqual(read_tree(self.root_dir.name), self.out_tree)
